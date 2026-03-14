@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium FD Calculator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #00adb5;
+            --text-primary: #eeeeee;
+            --text-secondary: #b3b3b3;
+            --input-bg: #2d2d2d;
+            --border-color: #3d3d3d;
+            --button-hover: #008f95;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .calculator-card {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border-color);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: var(--accent-color);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.4;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 2rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-calculate {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-calculate:hover {
+            background-color: var(--button-hover);
+        }
+
+        .btn-clear {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-clear:hover {
+            background-color: #2d2d2d;
+            color: #fff;
+        }
+
+        .results {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed var(--border-color);
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+
+        .result-val {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .error-msg {
+            color: #ff5252;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <h2>💰 Fixed Deposit Calculator</h2>
+    <p class="description">Calculate your interest earnings and maturity value based on specific compounding frequencies.</p>
+
+    <div class="input-group">
+        <label for="principal">Principal (Rs.)</label>
+        <input type="number" id="principal" placeholder="e.g. 5000000" min="1">
+        <div class="error-msg" id="err-principal">Please enter a valid amount.</div>
+    </div>
+
+    <div class="input-group">
+        <label for="rate">Rate of Interest (%)</label>
+        <input type="number" id="rate" placeholder="e.g. 10" step="0.1" min="0">
+        <div class="error-msg" id="err-rate">Please enter a valid interest rate.</div>
+    </div>
+
+    <div class="input-group">
+        <label>Period</label>
+        <div class="field-row">
+            <input type="number" id="periodValue" placeholder="5" min="1" style="flex: 2;">
+            <select id="periodUnit" style="flex: 1;">
+                <option value="day">day(s)</option>
+                <option value="month">month(s)</option>
+                <option value="year" selected>year(s)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label for="frequency">Frequency</label>
+        <select id="frequency">
+            <option value="0">Simple Interest</option>
+            <option value="12">Compounded Monthly</option>
+            <option value="4">Compounded Quarterly</option>
+            <option value="2">Compounded Half Yearly</option>
+            <option value="1">Compounded Yearly</option>
+        </select>
+    </div>
+
+    <div class="button-group">
+        <button class="btn-calculate" onclick="calculateFD()">CALCULATE</button>
+        <button class="btn-clear" onclick="clearFields()">CLEAR</button>
+    </div>
+
+    <div class="results" id="result-box">
+        <div class="result-item">
+            <span>Interest Amount:</span>
+            <span class="result-val" id="res-interest">₹0</span>
+        </div>
+        <div class="result-item">
+            <span>Maturity Value:</span>
+            <span class="result-val" id="res-total">₹0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateFD() {
+        // Inputs
+        const p = parseFloat(document.getElementById('principal').value);
+        const r = parseFloat(document.getElementById('rate').value);
+        const tVal = parseFloat(document.getElementById('periodValue').value);
+        const tUnit = document.getElementById('periodUnit').value;
+        const freq = parseInt(document.getElementById('frequency').value);
+
+        // Validation
+        let isValid = true;
+        if (isNaN(p) || p <= 0) {
+            document.getElementById('err-principal').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('err-principal').style.display = 'none';
+        }
+
+        if (isNaN(r) || r < 0) {
+            document.getElementById('err-rate').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('err-rate').style.display = 'none';
+        }
+
+        if (!isValid || isNaN(tVal)) return;
+
+        // Convert time to years
+        let t = tVal;
+        if (tUnit === 'day') t = tVal / 365;
+        if (tUnit === 'month') t = tVal / 12;
+
+        let maturityValue = 0;
+        const rateDecimal = r / 100;
+
+        if (freq === 0) {
+            // Simple Interest: A = P(1 + rt)
+            maturityValue = p * (1 + (rateDecimal * t));
+        } else {
+            // Compound Interest: A = P(1 + r/n)^(nt)
+            maturityValue = p * Math.pow((1 + (rateDecimal / freq)), (freq * t));
+        }
+
+        const interestEarned = maturityValue - p;
+
+        // Display Results
+        document.getElementById('res-interest').innerText = '₹' + interestEarned.toLocaleString('en-IN', {maximumFractionDigits: 2});
+        document.getElementById('res-total').innerText = '₹' + maturityValue.toLocaleString('en-IN', {maximumFractionDigits: 2});
+        document.getElementById('result-box').style.display = 'block';
+    }
+
+    function clearFields() {
+        document.getElementById('principal').value = '';
+        document.getElementById('rate').value = '';
+        document.getElementById('periodValue').value = '';
+        document.getElementById('result-box').style.display = 'none';
+        document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+    }
+</script>
+
+</body>
+</html>
